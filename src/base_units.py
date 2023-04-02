@@ -3,8 +3,7 @@ from src.attack_defence import AttackDefenceLevel
 from enum import Enum
 
 
-class BaseUnitType(Enum):
-    DEFAULT = ''
+class BaseUnitTypes(Enum):
     WEAK = 'Слабый'
     NORMAL = 'Обычный'
     FIGHTER = 'Воин'
@@ -13,21 +12,21 @@ class BaseUnitType(Enum):
 
 @dataclass
 class BaseUnit:
-    unit_type: BaseUnitType
+    unit_type: BaseUnitTypes | None
     hits: int
     attacks: dict
     defences: dict
     ultras: int
 
     def __init__(self):
-        self.unit_type = BaseUnitType.DEFAULT
+        self.unit_type = None
         self.hits = 0
         self.attacks = {}
         self.defences = {}
         self.ultras = 0
 
     def from_data(self, data: dict):
-        self.unit_type = BaseUnitType(data['Тип юнита'])
+        self.unit_type = BaseUnitTypes(data['Тип юнита'])
         self.hits = int(data['Хиты'] or 0)
 
         self.attacks[AttackDefenceLevel.SIMPLE.value] = int(data['Простой удар'] or 0)
@@ -44,19 +43,12 @@ class BaseUnit:
 
 @dataclass
 class BaseUnits:
-    weak_units: list[BaseUnit]
-    normal_units: list[BaseUnit]
-    fighter_units: list[BaseUnit]
-    master_units: list[BaseUnit]
+    units_dict: dict
 
     @classmethod
     def from_data(cls, data):
         units = [BaseUnit().from_data(row) for row in data]
-        weak_units = [unit for unit in units if unit.unit_type == BaseUnitType.WEAK]
-        normal_units = [unit for unit in units if unit.unit_type == BaseUnitType.NORMAL]
-        fighter_units = [unit for unit in units if unit.unit_type == BaseUnitType.FIGHTER]
-        master_units = [unit for unit in units if unit.unit_type == BaseUnitType.MASTER]
-        return cls(weak_units=weak_units,
-                   normal_units=normal_units,
-                   fighter_units=fighter_units,
-                   master_units=master_units)
+        units_dict = {}
+        for base_unit_type in BaseUnitTypes:
+            units_dict[base_unit_type] = [unit for unit in units if unit.unit_type == base_unit_type]
+        return cls(units_dict=units_dict)
