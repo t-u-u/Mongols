@@ -44,25 +44,19 @@ class BaseUnit:
 
 @dataclass
 class BaseUnits:
-    units: list[BaseUnit]
     weak_units: list[BaseUnit]
     normal_units: list[BaseUnit]
     fighter_units: list[BaseUnit]
     master_units: list[BaseUnit]
 
-    def __init__(self, units = None):
-        self.units = units if units else []
-        self.weak_units = []
-        self.normal_units = []
-        self.fighter_units = []
-        self.master_units = []
-
-    def __post_init__(self):
-        self.weak_unit = [unit for unit in self.units if unit.unit_type == BaseUnitType.WEAK.value]
-        self.normal_unit = [unit for unit in self.units if unit.unit_type == BaseUnitType.NORMAL.value]
-        self.fighter_units = [unit for unit in self.units if unit.unit_type == BaseUnitType.FIGHTER.value]
-        self.master_units = [unit for unit in self.units if unit.unit_type == BaseUnitType.MASTER.value]
-
     @classmethod
     def from_data(cls, data):
-        return cls(units=[BaseUnit().from_data(row) for row in data])
+        units = [BaseUnit().from_data(row) for row in data]
+        weak_units = [unit for unit in units if unit.unit_type == BaseUnitType.WEAK]
+        normal_units = [unit for unit in units if unit.unit_type == BaseUnitType.NORMAL]
+        fighter_units = [unit for unit in units if unit.unit_type == BaseUnitType.FIGHTER]
+        master_units = [unit for unit in units if unit.unit_type == BaseUnitType.MASTER]
+        return cls(weak_units=weak_units,
+                   normal_units=normal_units,
+                   fighter_units=fighter_units,
+                   master_units=master_units)
