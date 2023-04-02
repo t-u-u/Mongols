@@ -26,20 +26,19 @@ class BaseUnit:
         self.defences = {}
         self.ultras = 0
 
-
     def from_data(self, data: dict):
         self.unit_type = BaseUnitType(data['Тип юнита'])
-        self.hits = int(data['Хиты'])
+        self.hits = int(data['Хиты'] or 0)
 
-        self.attacks[AttackDefenceLevel.SIMPLE.value] = int(data['Простой удар']) if data['Простой удар'] else 0
-        self.attacks[AttackDefenceLevel.ADVANCED.value] = int(data['Сложный удар']) if data['Сложный удар'] else 0
-        self.attacks[AttackDefenceLevel.TAOIST.value] = int(data['Даосский удар']) if data['Даосский удар'] else 0
+        self.attacks[AttackDefenceLevel.SIMPLE.value] = int(data['Простой удар'] or 0)
+        self.attacks[AttackDefenceLevel.ADVANCED.value] = int(data['Сложный удар'] or 0)
+        self.attacks[AttackDefenceLevel.TAOIST.value] = int(data['Даосский удар'] or 0)
 
-        self.defences[AttackDefenceLevel.SIMPLE.value] = int(data['Простая защита']) if data['Простая защита'] else 0
-        self.defences[AttackDefenceLevel.ADVANCED.value] = int(data['Сложная защита']) if data['Сложная защита'] else 0
-        self.defences[AttackDefenceLevel.TAOIST.value] = int(data['Даосская защита']) if data['Даосская защита'] else 0
+        self.defences[AttackDefenceLevel.SIMPLE.value] = int(data['Простая защита'] or 0)
+        self.defences[AttackDefenceLevel.ADVANCED.value] = int(data['Сложная защита'] or 0)
+        self.defences[AttackDefenceLevel.TAOIST.value] = int(data['Даосская защита'] or 0)
 
-        self.ultras = int(data['Случайная спецабилка']) if data['Случайная спецабилка'] else 0
+        self.ultras = int(data['Случайная спецабилка'] or 0)
         return self
 
 
