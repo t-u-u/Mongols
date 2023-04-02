@@ -22,21 +22,21 @@ class AttackDefence:
     ultras: list
     personal_ultras: list
 
-    def __init__(self):
-        self.attacks = {}
-        self.defences = {}
-        self.ultras = []
-        self.personal_ultras = []
+    @classmethod
+    def from_data(cls, data):
+        attacks = {attack_defence_level: [] for attack_defence_level in AttackDefenceLevel}
+        defences = {attack_defence_level: [] for attack_defence_level in AttackDefenceLevel}
+        ultras = []
+        personal_ultras = []
 
-    def from_data(self, data):
         for row in data:
             match row['Тип для скрипта'].lower():
                 case AttackDefenceType.HIT.value:
-                    self.attacks[row['Название']] = row['Уровень для скрипта'].lower()
+                    attacks[AttackDefenceLevel(row['Уровень для скрипта'].lower())].append(row['Название'])
                 case AttackDefenceType.DEFENCE.value:
-                    self.defences[row['Название']] = row['Уровень для скрипта'].lower()
+                    defences[AttackDefenceLevel(row['Уровень для скрипта'].lower())].append(row['Название'])
                 case AttackDefenceType.ULTRA.value:
-                    self.ultras.append(row['Название'])
+                    ultras.append(row['Название'])
                 case AttackDefenceType.PERSONAL_ULTRA.value:
-                    self.personal_ultras.append(row['Название'])
-        return self
+                    personal_ultras.append(row['Название'])
+        return cls(attacks=attacks, defences=defences, ultras=ultras, personal_ultras=personal_ultras)
