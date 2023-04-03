@@ -3,10 +3,12 @@ from src.attack_defence import AttackDefence
 from src.base_units import BaseUnits
 from src.characters import Characters
 
+
 def main():
     with open('data/Боевка - Удары, защиты и спецабилки.csv') as data_f:
         reader = csv.DictReader(data_f)
         attack_def_dict = AttackDefence.from_data(reader)
+        attack_def_dict.check()
 
     with open('data/Боевка - Легенда.csv') as legend_f:
         reader = csv.DictReader(legend_f)
@@ -22,5 +24,6 @@ def main():
         writer.writeheader()
         for character in characters.to_list():
             writer.writerow(character)
+
 
 main()

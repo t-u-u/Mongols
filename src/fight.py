@@ -10,12 +10,6 @@ class FightResult(Enum):
     FAIL = 2
 
 
-def get_required_defence(attack: str, attack_defence: AttackDefence):
-    defence = attack.replace('Удар', 'Защита')
-    if defence not in attack_defence.get_full_defences():
-        raise ValueError(f'Не найдена защита "{defence}" для удара "{attack}".')
-
-
 def round(attacker: Character, defender: Character) -> FightResult:
     # Если у персонажа закончились удары, персонаж проиграл
     if (not attacker.current_attacks):
@@ -34,7 +28,7 @@ def round(attacker: Character, defender: Character) -> FightResult:
         attack = choice(attacker.current_attacks)
     attacker.current_attacks.remove(attack)
 
-    required_defence = attack.replace('Удар', 'Защита')
+    required_defence = AttackDefence.get_required_defence(attack)
     # Если защита есть, спокойно применяем
     if required_defence in defender.current_defences:
         defender.current_defences.remove(required_defence)

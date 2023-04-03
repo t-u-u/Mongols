@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from enum import Enum
-from src.fight import get_required_defence
 
 
 class AttackDefenceLevel(Enum):
@@ -45,16 +44,30 @@ class AttackDefence:
                     personal_ultras.append(row['Название'])
         return cls(attacks=attacks, defences=defences, ultras=ultras, personal_ultras=personal_ultras)
 
-    def get_full_defences(self):
-        full_defences = []
+    def get_all_defences(self):
+        all_defences = []
         for attack_defence_level in AttackDefenceLevel:
-            full_defences.extend(self.attacks[attack_defence_level])
+            all_defences.extend(self.attacks[attack_defence_level])
 
-    def get_full_attacks(self):
-        full_attacks = []
+    def get_all_attacks(self):
+        all_attacks = []
         for attack_defence_level in AttackDefenceLevel:
-            full_attacks.extend(self.attacks[attack_defence_level])
+            all_attacks.extend(self.attacks[attack_defence_level])
+
+    @classmethod
+    def get_required_defence(cls, attack: str):
+        return attack.replace('Удар', 'Защита')
+
+    @classmethod
+    def get_required_attack(cls, defence: str):
+        return defence.replace('Защита', 'Удар')
 
     def check(self):
-        for attack in self.get_full_attacks():
-            get_required_defence(attack)
+        for attack in self.get_all_attacks():
+            defence = self.get_required_defence(attack)
+            if defence not in self.get_all_defences():
+                raise ValueError(f'Не найдена защита "{defence}" для удара "{attack}".')
+        for defence in self.get_all_defences():
+            attack = self.get_required_attack()
+            if attack not in self.get_all_attacks():
+                raise ValueError(f'Не найден удар "{attack}" для защиты "{defence}".')
