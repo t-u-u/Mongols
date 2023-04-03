@@ -12,7 +12,14 @@ class Character:
     attacks: list
     defences: list
     ultras: list
-    personal_ultras: str
+    personal_ultras: list
+    full_ultras: list
+
+    current_hits: int
+    current_attacks: list
+    current_defences: list
+    current_ultras: list
+    first_choice_attack: str | None
 
     def __init__(self):
         self.name = ''
@@ -21,18 +28,22 @@ class Character:
         self.attacks = []
         self.defences = []
         self.ultras = []
-        self.personal_ultras = ''
+        self.personal_ultras = []
+        self.full_ultras = []
+
+        self.current_hits = 0
+        self.current_attacks = []
+        self.current_defences = []
+        self.current_ultras = []
+        self.first_choice_attack = None
 
     def to_dict(self):
-        full_ultras = list(self.ultras)
-        if self.personal_ultras:
-            full_ultras.append(self.personal_ultras)
         return {'Имя': self.name,
                 'Тип': self.unit_type.value,
                 'Хиты': self.hits,
                 'Атаки': ', '.join(self.attacks),
                 'Защиты': ', '.join(self.defences),
-                'Спецабилки': ', '.join(full_ultras)}
+                'Спецабилки': ', '.join(self.full_ultras)}
 
     def fill_skills(self, attack_defence: AttackDefence, base_units: BaseUnits):
         schema: BaseUnit = choice(base_units.units_dict[self.unit_type])
@@ -54,8 +65,12 @@ class Character:
         self.unit_type = BaseUnitType(data['Тип'])
         self.name = data['Персонаж']
         self.hits = int(data['Хиты'] or 0)
-        self.personal_ultras = data['спецабилка']
+        self.personal_ultras = data['спецабилка'].split(', ')
         self.fill_skills(attack_defence, base_units)
+
+        self.full_ultras = list(self.ultras)
+        if self.personal_ultras:
+            self.full_ultras.extend(self.personal_ultras)
 
         match data['Доп.удары/защиты']:
             case 'даосская атака':
