@@ -1,12 +1,19 @@
 from enum import Enum
 from random import choice
 from src.characters import Character
+from src.attack_defence import AttackDefence
 
 
 class FightResult(Enum):
     PROCEED = 0
     WIN = 1
     FAIL = 2
+
+
+def get_required_defence(attack: str, attack_defence: AttackDefence):
+    defence = attack.replace('Удар', 'Защита')
+    if defence not in attack_defence.get_full_defences():
+        raise ValueError(f'Не найдена защита "{defence}" для удара "{attack}".')
 
 
 def round(attacker: Character, defender: Character) -> FightResult:
