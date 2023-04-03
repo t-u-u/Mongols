@@ -68,10 +68,6 @@ class Character:
         self.personal_ultras = data['спецабилка'].split(', ')
         self.fill_skills(attack_defence, base_units)
 
-        self.full_ultras = list(self.ultras)
-        if self.personal_ultras:
-            self.full_ultras.extend(self.personal_ultras)
-
         match data['Доп.удары/защиты']:
             case 'даосская атака':
                 self.attacks.append(attack_defence.attacks[AttackDefenceLevel.TAOIST][0])
@@ -79,6 +75,19 @@ class Character:
                 self.defences.append(attack_defence.defences[AttackDefenceLevel.TAOIST][0])
 
         return self
+
+    def get_full_ultras(self):
+        full_ultras = list(self.ultras)
+        if self.personal_ultras:
+            full_ultras.extend(self.personal_ultras)
+        return full_ultras
+
+    def clear_before_combat(self):
+        self.current_hits = self.hits
+        self.current_attacks = self.attacks
+        self.current_defences = self.defences
+        self.current_ultras = self.get_full_ultras()
+        self.first_choice_attack = None
 
 
 @dataclass

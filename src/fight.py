@@ -66,18 +66,8 @@ def fight(attacker: Character, defender: Character) -> FightResult:
     :return: True if character win in fight with other character
     """
     # Скидываем значения перед боем
-    attacker.current_hits = attacker.hits
-    attacker.current_attacks = attacker.attacks
-    attacker.current_defences = attacker.defences
-    attacker.current_ultras = attacker.full_ultras
-
-    defender.current_hits = defender.hits
-    defender.current_attacks = defender.attacks
-    defender.current_defences = defender.defences
-    defender.current_ultras = defender.full_ultras
-
-    attacker.first_choice_attack = None
-    defender.first_choice_attack = None
+    attacker.clear_before_combat()
+    defender.clear_before_combat()
 
     self_is_attacker = True
     fight_result = 0
