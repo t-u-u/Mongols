@@ -21,15 +21,15 @@ class Character:
     current_ultras: list
     first_choice_attack: str | None
 
-    def __init__(self):
+    def __init__(self, hits=None, attacks=None, defences=None, full_ultras=None):
         self.name = ''
         self.unit_type = None
-        self.hits = 0
-        self.attacks = []
-        self.defences = []
+        self.hits = hits or 0
+        self.attacks = attacks or []
+        self.defences = defences or []
         self.ultras = []
         self.personal_ultras = []
-        self.full_ultras = []
+        self.full_ultras = full_ultras or []
 
         self.current_hits = 0
         self.current_attacks = []
