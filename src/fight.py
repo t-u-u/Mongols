@@ -71,14 +71,14 @@ class Fight:
         attacker.clear_before_combat()
         defender.clear_before_combat()
 
-        self_is_attacker = True
+        is_attacker_move = True
         fight_result = 0
 
         while not fight_result:
-            if self_is_attacker:
+            if is_attacker_move:
                 fight_result = self.round(attacker, defender).value
             else:
                 fight_result = self.round(defender, attacker).value
-            self_is_attacker = not self_is_attacker
+            is_attacker_move = not is_attacker_move
 
         return fight_result
