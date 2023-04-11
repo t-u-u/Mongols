@@ -13,13 +13,13 @@ class Character:
     defences: list
     ultras: list
     personal_ultras: list
-    full_ultras: list
 
     current_hits: int
     current_attacks: list
     current_defences: list
     current_ultras: list
-    first_choice_attack: str | None
+    first_choice_attacks: list[str]
+    attack_queue: list[str]
 
     def __init__(self, hits=None, attacks=None, defences=None, full_ultras=None):
         self.name = ''
@@ -29,21 +29,24 @@ class Character:
         self.defences = defences or []
         self.ultras = []
         self.personal_ultras = []
-        self.full_ultras = full_ultras or []
 
         self.current_hits = 0
         self.current_attacks = []
         self.current_defences = []
         self.current_ultras = []
-        self.first_choice_attack = None
+        self.first_choice_attacks = None
+        self.attack_queue = []
 
     def to_dict(self):
+        full_ultras = []
+        full_ultras.extend(self.ultras)
+        full_ultras.extend(self.personal_ultras)
         return {'Имя': self.name,
                 'Тип': self.unit_type.value,
                 'Хиты': self.hits,
                 'Атаки': ', '.join(self.attacks),
                 'Защиты': ', '.join(self.defences),
-                'Спецабилки': ', '.join(self.full_ultras)}
+                'Спецабилки': ', '.join(full_ultras)}
 
     def fill_skills(self, attack_defence: AttackDefence, base_units: BaseUnits):
         schema: BaseUnit = choice(base_units.units_dict[self.unit_type])
@@ -87,7 +90,8 @@ class Character:
         self.current_attacks = self.attacks
         self.current_defences = self.defences
         self.current_ultras = self.get_full_ultras()
-        self.first_choice_attack = None
+        self.first_choice_attacks = None
+        self.attack_queue = []
 
 
 @dataclass

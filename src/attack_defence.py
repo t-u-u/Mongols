@@ -22,9 +22,6 @@ class AttackDefence:
     ultras: list
     personal_ultras: list
 
-    full_attacks: list
-    full_defences: list
-
     @classmethod
     def from_data(cls, data):
         attacks = {attack_defence_level: [] for attack_defence_level in AttackDefenceLevel}
@@ -47,12 +44,14 @@ class AttackDefence:
     def get_all_defences(self):
         all_defences = []
         for attack_defence_level in AttackDefenceLevel:
-            all_defences.extend(self.attacks[attack_defence_level])
+            all_defences.extend(self.defences[attack_defence_level])
+        return all_defences
 
     def get_all_attacks(self):
         all_attacks = []
         for attack_defence_level in AttackDefenceLevel:
             all_attacks.extend(self.attacks[attack_defence_level])
+        return all_attacks
 
     @classmethod
     def get_required_defence(cls, attack: str):
@@ -68,6 +67,8 @@ class AttackDefence:
             if defence not in self.get_all_defences():
                 raise ValueError(f'Не найдена защита "{defence}" для удара "{attack}".')
         for defence in self.get_all_defences():
-            attack = self.get_required_attack()
+            attack = self.get_required_attack(defence)
             if attack not in self.get_all_attacks():
                 raise ValueError(f'Не найден удар "{attack}" для защиты "{defence}".')
+        assert self.ultras, "Список спецабилок пуст"
+        assert self.personal_ultras, "Список личных спецабилок пуст"
