@@ -39,13 +39,17 @@ class Character:
         self.first_choice_attacks = None
         self.attack_queue = []
 
-    def to_dict(self):
+    def to_dict(self, for_print: bool = False):
+        if for_print:
+            delimiter = '\n'
+        else:
+            delimiter = ', '
         return {'Имя': self.name,
                 'Тип': self.unit_type.value,
                 'Хиты': self.hits,
-                'Атаки': ', '.join(self.attacks),
-                'Защиты': ', '.join(self.defences),
-                'Спецабилки': ', '.join(self.ultras)}
+                'Атаки': (delimiter.join(self.attacks)).strip(delimiter),
+                'Защиты': (delimiter.join(self.defences)).strip(delimiter),
+                'Спецабилки': (delimiter.join(self.ultras)).strip(delimiter)}
 
     def fill_skills(self, attack_defence: AttackDefence, base_units: BaseUnits):
         schema: BaseUnit = choice(base_units.units_dict[self.unit_type])
@@ -68,7 +72,7 @@ class Character:
         self.unit_type = BaseUnitType(data['Тип'])
         self.name = data['Персонаж']
         self.hits = int(data['Хиты'] or 0)
-        self.personal_ultras = data['спецабилка'].split(', ')
+        self.personal_ultras = [personal_ultra.capitalize() for personal_ultra in data['спецабилка'].split(', ')]
         self.fill_skills(attack_defence, base_units)
 
         match data['Доп.удары/защиты']:
@@ -129,5 +133,5 @@ class Characters:
             character1.from_other_character_to_draw(character2)
         return self
 
-    def to_list(self):
-        return [character.to_dict() for character in self.characters]
+    def to_list(self, for_print: bool = False):
+        return [character.to_dict(for_print) for character in self.characters]
