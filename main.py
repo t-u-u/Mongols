@@ -14,9 +14,16 @@ def main():
         reader = csv.DictReader(legend_f)
         base_units = BaseUnits.from_data(reader)
 
+    with open('data/Боевка - Ничьи.csv') as draws_f:
+        reader = csv.reader(draws_f)
+        next(reader)
+        draws = [row for row in reader]
+
     with open('data/Боевка - Персонажи.csv') as characters_f:
         reader = csv.DictReader(characters_f)
+        # characters = Characters.from_data(reader, attack_def_dict, base_units)
         characters = Characters.from_data(reader, attack_def_dict, base_units)
+        characters.generate_draws(draws)
 
     with open('data/result.csv', 'w') as res_f:
         fieldnames = characters.HEADER

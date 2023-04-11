@@ -22,6 +22,7 @@ class Character:
     attack_queue: list[str]
 
     def __init__(self, hits=None, attacks=None, defences=None, full_ultras=None):
+        # Базовые характеристики
         self.name = ''
         self.unit_type = None
         self.hits = hits or 0
@@ -30,6 +31,7 @@ class Character:
         self.ultras = []
         self.personal_ultras = []
 
+        # Характеристики для конкретного боя
         self.current_hits = 0
         self.current_attacks = []
         self.current_defences = []
@@ -38,15 +40,12 @@ class Character:
         self.attack_queue = []
 
     def to_dict(self):
-        full_ultras = []
-        full_ultras.extend(self.ultras)
-        full_ultras.extend(self.personal_ultras)
         return {'Имя': self.name,
                 'Тип': self.unit_type.value,
                 'Хиты': self.hits,
                 'Атаки': ', '.join(self.attacks),
                 'Защиты': ', '.join(self.defences),
-                'Спецабилки': ', '.join(full_ultras)}
+                'Спецабилки': ', '.join(self.ultras)}
 
     def fill_skills(self, attack_defence: AttackDefence, base_units: BaseUnits):
         schema: BaseUnit = choice(base_units.units_dict[self.unit_type])
@@ -63,6 +62,7 @@ class Character:
                                         k=schema.defences[attack_defence_level]))
 
         self.ultras = sample(attack_defence.ultras, k=schema.ultras)
+        self.ultras.extend(self.personal_ultras)
 
     def from_data(self, data: dict, attack_defence: AttackDefence, base_units: BaseUnits):
         self.unit_type = BaseUnitType(data['Тип'])
@@ -76,20 +76,33 @@ class Character:
                 self.attacks.append(attack_defence.attacks[AttackDefenceLevel.TAOIST][0])
             case 'даосская защита':
                 self.defences.append(attack_defence.defences[AttackDefenceLevel.TAOIST][0])
-
         return self
 
-    def get_full_ultras(self):
-        full_ultras = list(self.ultras)
-        if self.personal_ultras:
-            full_ultras.extend(self.personal_ultras)
-        return full_ultras
+    def from_other_character_to_draw(self, other):
+        """
+        Для персонажей одинакового типа, у которых должна быть ничья, задаем атаки и защиты друг от друга.
+        :param other:
+        :return:
+        """
+        if not other.unit_type:
+            raise ValueError(f'Не задан тип персонажа {other.name}')
+        elif self.unit_type != other.unit_type:
+            raise ValueError(f'У персонажа {self.name} тип юнита {self.unit_type}, а у персонажа {other.name} '
+                             f'тип юнита {other.unit_type}. Нельзя сделать автоматическую ничью.')
+        else:
+            self.attacks = []
+            self.defences = []
+            for attack in other.attacks:
+                self.defences.append(AttackDefence.get_required_defence(attack))
+            for defence in other.defences:
+                self.attacks.append(AttackDefence.get_required_attack(defence))
+        return self
 
     def clear_before_combat(self):
         self.current_hits = self.hits
         self.current_attacks = self.attacks
         self.current_defences = self.defences
-        self.current_ultras = self.get_full_ultras()
+        self.current_ultras = self.ultras
         self.first_choice_attacks = None
         self.attack_queue = []
 
@@ -97,11 +110,24 @@ class Character:
 @dataclass
 class Characters:
     HEADER = ['Имя', 'Тип', 'Хиты', 'Атаки', 'Защиты', 'Спецабилки']
-    characters: list
+    characters: list = None
 
     @classmethod
     def from_data(cls, data, attack_defence: AttackDefence, base_units: BaseUnits):
         return cls(characters=[Character().from_data(row, attack_defence, base_units) for row in data])
+
+    def get_character_by_name(self, name: str) -> Character:
+        for character in self.characters:
+            if character.name == name:
+                return character
+
+    def generate_draws(self, draws: list):
+        # self.from_data(data, attack_defence, base_units)
+        for character_name1, character_name2 in draws:
+            character1 = self.get_character_by_name(character_name1)
+            character2 = self.get_character_by_name(character_name2)
+            character1.from_other_character_to_draw(character2)
+        return self
 
     def to_list(self):
         return [character.to_dict() for character in self.characters]
