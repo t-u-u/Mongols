@@ -1,7 +1,7 @@
 from enum import Enum
 from random import choice
 from src.characters import Character
-from src.attack_defence import AttackDefence
+from src.attack_defence import AttackDefence, AttackDefenceLevel
 
 
 class FightResult(Enum):
@@ -18,7 +18,54 @@ class Fight:
         self.attack_queue_length = attack_queue_length or 2
         self.hits_to_stop_combat = hits_to_stop_combat or 1
 
-    def round(self, attacker: Character, defender: Character) -> FightResult:
+    @staticmethod
+    def get_random_item_from_intersection(first_list: list, second_list: list):
+        first_set = set(first_list)
+        second_set = set(second_list)
+        return choice(first_set.intersection(second_set))
+
+    def get_best_attack(self, attacker: Character, attack_defence: AttackDefence):
+        """
+        Ищем доступную атаку в следующем порядке:
+        - среди заведомо проходящих ударов
+        - среди даосских ударов
+        - среди сложных ударов
+        - среди простых ударов
+        Если ничего не найдено, поднимаем эксепшн.
+        :param attacker:
+        :param attack_defence:
+        :return:
+        """
+        for attack_group in [attacker.first_choice_attacks,
+                             attack_defence.attacks[AttackDefenceLevel.TAOIST],
+                             attack_defence.attacks[AttackDefenceLevel.ADVANCED],
+                             attack_defence.attacks[AttackDefenceLevel.SIMPLE]]:
+            attack = self.get_random_item_from_intersection(attack_group, attacker.current_attacks)
+            if attack:
+                return attack
+        raise Exception(f'Не найдены атаки у персонажа {attacker.name}, '
+                        f'список доступных атак: {attacker.current_attacks}')
+
+    def round(self, attacker: Character, defender: Character, attack_defence: AttackDefence) -> FightResult:
+        """
+
+        :param attacker:
+        :param defender:
+        :return:
+        """
+        attack = self.get_best_attack()
+
+
+    def round_old(self, attacker: Character, defender: Character) -> FightResult:
+        """
+        Если есть даосский удар - начинаем с него
+        Если есть сложный - начинаем с него
+        С ударом стервятника нельзя двойной урон
+        Первый прошедший урон удвой
+        :param attacker:
+        :param defender:
+        :return:
+        """
         # Если у персонажа закончились удары, персонаж проиграл
         if (not attacker.current_attacks):
             if 'Повторение удара' in attacker.current_ultras:
@@ -28,9 +75,9 @@ class Fight:
                 return FightResult.FAIL
 
         # Если атакующий знает, что у него есть заведомо успешная атака, он может использовать ее.
-        if attacker.first_choice_attack:
-            attack = attacker.first_choice_attack
-            attacker.first_choice_attack = None
+        if attacker.first_choice_attacks:
+            attack = attacker.first_choice_attacks
+            attacker.first_choice_attacks = None
         # Если нет, выбирает случайную
         else:
             attack = choice(attacker.current_attacks)
@@ -56,7 +103,7 @@ class Fight:
                 defender.current_hits = defender.current_hits - 1
             # Если нападающий умеет повторять удары, успешный надо повторить
             if ('Повторение удара' in attacker.current_ultras):
-                attacker.first_choice_attack = attack
+                attacker.first_choice_attacks = attack
                 attacker.current_attacks.append(attack)
                 attacker.current_ultras.remove('Повторение удара')
 
@@ -66,7 +113,7 @@ class Fight:
 
         return FightResult.PROCEED
 
-    def fight(self, attacker: Character, defender: Character) -> int:
+    def fight(self, attacker: Character, defender: Character, attack_defence: AttackDefence) -> int:
         # Скидываем значения перед боем
         attacker.clear_before_combat()
         defender.clear_before_combat()
