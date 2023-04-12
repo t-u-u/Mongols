@@ -20,6 +20,7 @@ class Character:
     current_ultras: list
     first_choice_attacks: list[str]
     attack_queue: list[str]
+    defence_queue: list[str]
 
     def __init__(self, hits=None, attacks=None, defences=None, full_ultras=None):
         # Базовые характеристики
@@ -36,8 +37,9 @@ class Character:
         self.current_attacks = []
         self.current_defences = []
         self.current_ultras = []
-        self.first_choice_attacks = None
+        self.first_choice_attacks = []
         self.attack_queue = []
+        self.defence_queue = []
 
     def to_dict(self, for_print: bool = False):
         if for_print:
@@ -107,8 +109,9 @@ class Character:
         self.current_attacks = self.attacks
         self.current_defences = self.defences
         self.current_ultras = self.ultras
-        self.first_choice_attacks = None
+        self.first_choice_attacks = []
         self.attack_queue = []
+        self.defence_queue = []
 
 
 @dataclass
