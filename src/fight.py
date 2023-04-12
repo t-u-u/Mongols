@@ -2,6 +2,7 @@ from enum import Enum
 from random import choice
 from src.characters import Character
 from src.attack_defence import AttackDefence, AttackDefenceLevel
+import logging
 
 
 class FightResult(Enum):
@@ -51,6 +52,10 @@ class Fight:
         :param attack_defence:
         :return:
         """
+        logging.debug(f'{self.attacker.name}\n'
+                      f'Доступные атаки:\n{self.attacker.current_attacks}\n'
+                      f'Очередь атак: {self.attacker.attack_queue}'
+                      f'Ультры: {self.attacker.current_ultras}')
         for attack_group in [self.attacker.first_choice_attacks,
                              self.attack_defence.attacks[AttackDefenceLevel.TAOIST],
                              self.attack_defence.attacks[AttackDefenceLevel.ADVANCED],
@@ -59,9 +64,11 @@ class Fight:
             if attack:
                 self.add_attack_defence_to_queue(self.attacker.current_attacks, self.attacker.attack_queue, attack)
                 self.current_attack = attack
+                logging.info(f'{self.attacker.name}: {self.current_attack}')
                 return self
         raise Exception(f'Не найдены атаки у персонажа {self.attacker.name}, '
-                        f'список доступных атак: {self.attacker.current_attacks}')
+                        f'список доступных атак: {self.attacker.current_attacks},'
+                        f'список атак: {self.attacker.attacks}')
 
     def try_to_defend(self):
         """
@@ -70,21 +77,29 @@ class Fight:
         :param attack:
         :return: True если защита прошла успешно, False если нет
         """
+        logging.debug(f'{self.defender.name}\n'
+                      f'Доступные защиты:\n{self.defender.current_defences}\n'
+                      f'Очередь защит: {self.defender.defence_queue}\n'
+                      f'Ультры: {self.defender.current_ultras}')
         required_defence = AttackDefence.get_required_defence(self.current_attack)
         # Если защита есть, спокойно применяем
         if required_defence in self.defender.current_defences:
+            logging.info(f'{self.defender.name}: {required_defence}\n')
             self.add_attack_defence_to_queue(self.defender.current_defences, self.defender.defence_queue, required_defence)
         # Если защиты нет, но есть Уворот, применяем его
         elif 'Уворот' in self.defender.current_ultras:
+            logging.info(f'{self.defender.name}: Уворот')
             self.defender.current_ultras.remove('Уворот')
         # Если есть Повторение защиты, и нужная защита есть в известных, повторяем ее
         elif 'Повторение защиты' in self.defender.current_ultras:
+            logging.info(f'{self.defender.name}: Повторение защиты')
             if required_defence in self.defender.defence_queue:
                 self.defender.current_ultras.remove('Повторение защиты')
                 # Добавляем переиспользованную защиту в очередь заново
                 self.defender.defence_queue.remove(required_defence)
                 self.defender.defence_queue.append(required_defence)
         else:
+            logging.info('Атака прошла успешно')
             self.is_attack_successful = True
             return self
         self.is_attack_successful = False
@@ -101,16 +116,19 @@ class Fight:
 
             # Если есть двойной урон, применяем
             if ('Двойной урон' in self.attacker.current_ultras):
+                logging.info(f'{self.attacker.name}: Двойной урон')
                 self.defender.current_hits = self.defender.current_hits - 2
                 self.attacker.current_ultras.remove('Двойной урон')
             else:
                 self.defender.current_hits = self.defender.current_hits - 1
+            logging.info(f'Хиты {self.defender.name}: {self.defender.current_hits}')
 
             # Если нападающий умеет повторять удары, успешный надо вернуть в стэк
             if ('Повторение удара' in self.attacker.current_ultras):
                 self.attacker.current_attacks.append(self.current_attack)
                 self.attacker.attack_queue.remove(self.current_attack)
                 self.attacker.current_ultras.remove('Повторение удара')
+                logging.info(f'{self.attacker.name}: Повторение удара. {self.current_attack} вернулся в доступные')
 
             # Если у противника закончились хиты, нападающий победил
             if self.defender.current_hits <= self.hits_to_stop_combat:
@@ -123,16 +141,29 @@ class Fight:
         :param defender:
         :return: True if attacker wins, and False if still not
         """
+        logging.debug(f'____________________________\n{self.attacker.name} -> {self.defender.name}.')
         self.try_to_attack()
         self.try_to_defend()
         return self.calculate_attack_result()
 
-    def fight(self, attacker: Character, defender: Character) -> FightResult:
+    def go_fight(self, attacker: Character, defender: Character) -> FightResult:
         # Скидываем значения перед боем
         self.attacker = attacker
         self.defender = defender
         self.attacker.clear_before_combat()
         self.defender.clear_before_combat()
+
+        logging.info(f'Начат бой между персонажами {self.attacker.name} и {self.defender.name}.\n'
+                     f'{self.attacker.name}\n'
+                     f'Хиты: {self.attacker.current_hits}\n'
+                     f'Атаки: {self.attacker.current_attacks}\n'
+                     f'Защиты: {self.attacker.current_defences}\n'
+                     f'Ультры: {self.attacker.current_ultras}\n\n'
+                     f'{self.defender.name}\n'
+                     f'Хиты: {self.defender.current_hits}\n'
+                     f'Атаки: {self.defender.current_attacks}\n'
+                     f'Защиты: {self.defender.current_defences}\n'
+                     f'Ультры: {self.defender.current_ultras}\n\n')
 
         is_attacker_move = True
         fight_result = FightResult.DRAW
@@ -143,13 +174,17 @@ class Fight:
                 self.attacker = attacker
                 self.defender = defender
                 if self.round():
+                    logging.info(f'{self.attacker.name} победил.')
                     fight_result = FightResult.WIN
             else:
                 self.attacker = defender
                 self.defender = attacker
                 if self.round():
+                    logging.info(f'{self.attacker.name} победил.')
                     fight_result = FightResult.FAIL
             is_attacker_move = not is_attacker_move
             round_counter += 1
 
+        if fight_result == FightResult.DRAW:
+            logging.info(f'У {self.attacker.name} и {self.defender.name} ничья.')
         return fight_result

@@ -1,7 +1,9 @@
-from src.fight import Fight, FightResult
-from src.characters import Character
 import csv
+import logging
+
 from src.attack_defence import AttackDefence
+from src.characters import Character
+from src.fight import Fight, FightResult
 
 
 class TestFight:
@@ -18,9 +20,10 @@ class TestFight:
 
     def test_simple_fight(self):
         attacker = Character(attacks=['Удар орла'], hits=1)
-        defender = Character(defences=['Защита лошади', 'Защита барса', 'Защита медведя', 'Защита чистой воды'], hits=1)
+        defender = Character(defences=['Защита лошади', 'Защита барса', 'Защита медведя', 'Защита чистой воды'], hits=2)
 
-        assert self.fight.fight(attacker, defender) == FightResult.WIN
+        assert self.fight.go_fight(attacker, defender) == FightResult.WIN
+
     def test_draw(self):
         attacker = Character(attacks=['Удар орла', 'Удар барса', 'Удар журавля'],
                              defences=['Защита медведя', 'Защита лошади', 'Защита журавля'],
@@ -28,23 +31,25 @@ class TestFight:
         defender = Character(attacks=['Удар медведя', 'Удар лошади', 'Удар журавля'],
                              defences=['Защита орла', 'Защита барса', 'Защита журавля'],
                              hits=2)
-        assert self.fight.fight(attacker, defender) == FightResult.DRAW
+        assert self.fight.go_fight(attacker, defender) == FightResult.DRAW
 
     def test_attacker_fails(self):
         attacker = Character(attacks=['Удар орла', 'Удар барса', 'Удар журавля'],
                              defences=['Защита медведя', 'Защита лошади'],
-                             hits=2)
+                             hits=5)
         defender = Character(attacks=['Удар медведя', 'Удар лошади', 'Удар журавля'],
                              defences=['Защита орла', 'Защита барса', 'Защита журавля'],
-                             hits=2)
-        assert self.fight.fight(attacker, defender) == FightResult.FAIL
+                             hits=5)
+        assert self.fight.go_fight(attacker, defender) == FightResult.FAIL
 
-    def test_ultra(self):
-        attacker = Character(attacks=['Удар барса', 'Удар барса', 'Удар барса'],
+    def test_ultra_double_damage(self):
+        attacker = Character(name='Атакующий Вася',
+                             attacks=['Удар барса', 'Удар барса', 'Удар барса'],
                              defences=['Защита лошади', 'Защита лошади', 'Защита лошади'],
-                             full_ultras=['Двойной урон'],
-                             hits=2)
-        defender = Character(attacks=['Удар медведя', 'Удар медведя', 'Удар медведя'],
+                             hits=3)
+        defender = Character(name='Защищающийся Петя',
+                             attacks=['Удар медведя', 'Удар медведя', 'Удар медведя'],
                              defences=['Защита орла', 'Защита журавля', 'Защита лошади'],
-                             hits=2)
-        assert self.fight.fight(attacker, defender) == FightResult.WIN
+                             ultras=['Двойной урон'],
+                             hits=3)
+        assert self.fight.go_fight(attacker, defender) == FightResult.FAIL

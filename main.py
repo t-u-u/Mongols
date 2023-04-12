@@ -2,7 +2,7 @@ import csv
 from src.attack_defence import AttackDefence
 from src.base_units import BaseUnits
 from src.characters import Characters
-
+from src.fight import Fight
 
 def generate_characters():
     with open('data/Боевка - Удары, защиты и спецабилки.csv') as data_f:
@@ -37,6 +37,21 @@ def generate_characters():
         writer.writeheader()
         for character in characters.to_list(for_print=True):
             writer.writerow(character)
+
+    with open('data/fight_result.csv', 'w') as fight_res_f:
+        fieldnames = ['']
+        fieldnames.extend([character.name for character in characters.characters])
+        writer = csv.DictWriter(fight_res_f, fieldnames=fieldnames, delimiter="\t")
+        writer.writeheader()
+        fight = Fight(attack_defence=attack_def_dict)
+        for first_character in characters.characters:
+            cur_row = {'': first_character.name}
+            for second_character in characters.characters:
+                if first_character != second_character:
+                    cur_row[second_character.name] = fight.go_fight(first_character, second_character).name
+                else:
+                    cur_row[second_character.name] = ''
+            writer.writerow(cur_row)
 
 
 generate_characters()

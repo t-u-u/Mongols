@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from src.attack_defence import AttackDefence, AttackDefenceLevel
 from src.base_units import BaseUnit, BaseUnits, BaseUnitType
 from random import sample, choice
+import datetime
 
 
 @dataclass
@@ -22,14 +23,14 @@ class Character:
     attack_queue: list[str]
     defence_queue: list[str]
 
-    def __init__(self, hits=None, attacks=None, defences=None, full_ultras=None):
+    def __init__(self, name=None, hits=None, attacks=None, defences=None, ultras=None):
         # Базовые характеристики
-        self.name = ''
+        self.name = name or None
         self.unit_type = None
         self.hits = hits or 0
         self.attacks = attacks or []
         self.defences = defences or []
-        self.ultras = []
+        self.ultras = ultras or []
         self.personal_ultras = []
 
         # Характеристики для конкретного боя
@@ -106,9 +107,9 @@ class Character:
 
     def clear_before_combat(self):
         self.current_hits = self.hits
-        self.current_attacks = self.attacks
-        self.current_defences = self.defences
-        self.current_ultras = self.ultras
+        self.current_attacks = list(self.attacks)
+        self.current_defences = list(self.defences)
+        self.current_ultras = list(self.ultras)
         self.first_choice_attacks = []
         self.attack_queue = []
         self.defence_queue = []
