@@ -53,3 +53,30 @@ class TestFight:
                              ultras=['Двойной урон'],
                              hits=3)
         assert self.fight.go_fight(attacker, defender) == FightResult.FAIL
+
+    def test_ultra_retry_defence(self):
+        attacker = Character(name='Вася',
+                             attacks=['Удар лошади', 'Удар лошади', 'Удар орла'],
+                             defences=['Защита орла', 'Защита журавля', 'Защита барса'],
+                             hits=4)
+        defender = Character(name='Петя',
+                             attacks=['Удар лошади', 'Удар стервятника', 'Удар медведя'],
+                             defences=['Защита лошади', 'Защита орла', 'Защита стервятника'],
+                             ultras=['Повторение защиты'],
+                             hits=2)
+        assert self.fight.go_fight(attacker, defender) == FightResult.FAIL
+
+    def test_ultra_specific_characters(self):
+        attacker = Character(name='Хайюнь',
+                             attacks=['Удар лошади', 'Удар журавля', 'Удар медведя', 'Удар орла',
+                                      'Удар стервятника', 'Удар водяного вихря'],
+                             defences=['Защита медведя', 'Защита журавля', 'Защита барса', 'Защита орла',
+                                       'Защита скорпиона', 'Защита водяного вихря'],
+                             ultras=['Повторение атаки'],
+                             hits=5)
+        defender = Character(name='Ходжа Насреддин',
+                             attacks=['Удар лошади', 'Удар барса', 'Удар медведя'],
+                             defences=['"Защита лошади', 'Защита орла', 'Защита стервятника'],
+                             ultras=['Повторение защиты'],
+                             hits=5)
+        assert self.fight.go_fight(attacker, defender) == FightResult.WIN

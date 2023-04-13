@@ -1,3 +1,4 @@
+import random
 from enum import Enum
 from random import choice
 from src.characters import Character
@@ -56,6 +57,7 @@ class Fight:
                       f'Доступные атаки:\n{self.attacker.current_attacks}\n'
                       f'Очередь атак: {self.attacker.attack_queue}'
                       f'Ультры: {self.attacker.current_ultras}')
+        # Ищем атаку среди доступных в следующем порядке: сначала даосскую, потом сильную, только потом простую
         for attack_group in [self.attacker.first_choice_attacks,
                              self.attack_defence.attacks[AttackDefenceLevel.TAOIST],
                              self.attack_defence.attacks[AttackDefenceLevel.ADVANCED],
@@ -65,6 +67,19 @@ class Fight:
                 self.add_attack_defence_to_queue(self.attacker.current_attacks, self.attacker.attack_queue, attack)
                 self.current_attack = attack
                 logging.info(f'{self.attacker.name}: {self.current_attack}')
+
+                # Если есть спецабилка "Повтор удара", с 50% вероятностью повторяем сильную или даосскую атаку
+                if ('Повторение удара' in self.attacker.current_ultras):
+                    if (attack in self.attack_defence.attacks[AttackDefenceLevel.TAOIST]) or \
+                            (attack in self.attack_defence.attacks[AttackDefenceLevel.ADVANCED]):
+                        if choice([True, False]):
+                            self.attacker.current_attacks.append(self.current_attack)
+                            self.attacker.attack_queue.remove(self.current_attack)
+                            self.attacker.first_choice_attacks.append(self.current_attack)
+                            self.attacker.current_ultras.remove('Повторение удара')
+                            logging.info(
+                                f'{self.attacker.name}: Повторение удара. {self.current_attack} вернулся в доступные\n')
+
                 return self
         raise Exception(f'Не найдены атаки у персонажа {self.attacker.name}, '
                         f'список доступных атак: {self.attacker.current_attacks},'
@@ -86,20 +101,27 @@ class Fight:
         if required_defence in self.defender.current_defences:
             logging.info(f'{self.defender.name}: {required_defence}\n')
             self.add_attack_defence_to_queue(self.defender.current_defences, self.defender.defence_queue, required_defence)
+            # Если от атаки есть штатная защита, убираем ее из атак первого выбора.
+            if self.current_attack in self.attacker.first_choice_attacks:
+                self.attacker.first_choice_attacks.remove(self.current_attack)
         # Если защиты нет, но есть Уворот, применяем его
         elif 'Уворот' in self.defender.current_ultras:
-            logging.info(f'{self.defender.name}: Уворот')
+            logging.info(f'{self.defender.name}: Уворот\n')
             self.defender.current_ultras.remove('Уворот')
+            # Удар, от которого применили спецабилку, добавляем в атаки первого выбора
+            self.attacker.first_choice_attacks.append(self.current_attack)
         # Если есть Повторение защиты, и нужная защита есть в известных, повторяем ее
-        elif 'Повторение защиты' in self.defender.current_ultras:
-            logging.info(f'{self.defender.name}: Повторение защиты')
-            if required_defence in self.defender.defence_queue:
-                self.defender.current_ultras.remove('Повторение защиты')
-                # Добавляем переиспользованную защиту в очередь заново
-                self.defender.defence_queue.remove(required_defence)
-                self.defender.defence_queue.append(required_defence)
+        elif ('Повторение защиты' in self.defender.current_ultras) \
+                and (required_defence in self.defender.defence_queue):
+            logging.info(f'{self.defender.name}: Повторение защиты {required_defence}\n')
+            self.defender.current_ultras.remove('Повторение защиты')
+            # Добавляем переиспользованную защиту в очередь заново
+            self.defender.defence_queue.remove(required_defence)
+            self.defender.defence_queue.append(required_defence)
         else:
             logging.info('Атака прошла успешно')
+            # Успешный удар добавляем в атаки первого выбора
+            self.attacker.first_choice_attacks.append(self.current_attack)
             self.is_attack_successful = True
             return self
         self.is_attack_successful = False
@@ -111,24 +133,21 @@ class Fight:
         :return: True if attacker wins, and False if still not
         """
         if self.is_attack_successful:
-            # Успешный удар добавляем в атаки первого выбора
-            self.attacker.first_choice_attacks.append(self.current_attack)
-
             # Если есть двойной урон, применяем
             if ('Двойной урон' in self.attacker.current_ultras):
-                logging.info(f'{self.attacker.name}: Двойной урон')
+                logging.info(f'{self.attacker.name}: Двойной урон\n')
                 self.defender.current_hits = self.defender.current_hits - 2
                 self.attacker.current_ultras.remove('Двойной урон')
             else:
                 self.defender.current_hits = self.defender.current_hits - 1
-            logging.info(f'Хиты {self.defender.name}: {self.defender.current_hits}')
+            logging.info(f'Хиты {self.defender.name}: {self.defender.current_hits}\n')
 
             # Если нападающий умеет повторять удары, успешный надо вернуть в стэк
             if ('Повторение удара' in self.attacker.current_ultras):
                 self.attacker.current_attacks.append(self.current_attack)
                 self.attacker.attack_queue.remove(self.current_attack)
                 self.attacker.current_ultras.remove('Повторение удара')
-                logging.info(f'{self.attacker.name}: Повторение удара. {self.current_attack} вернулся в доступные')
+                logging.info(f'{self.attacker.name}: Повторение удара. {self.current_attack} вернулся в доступные\n')
 
             # Если у противника закончились хиты, нападающий победил
             if self.defender.current_hits <= self.hits_to_stop_combat:

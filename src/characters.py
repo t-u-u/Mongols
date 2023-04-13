@@ -124,6 +124,10 @@ class Characters:
     def from_data(cls, data, attack_defence: AttackDefence, base_units: BaseUnits):
         return cls(characters=[Character().from_data(row, attack_defence, base_units) for row in data])
 
+    @classmethod
+    def from_generated_data(cls):
+        pass
+
     def get_character_by_name(self, name: str) -> Character:
         for character in self.characters:
             if character.name == name:
