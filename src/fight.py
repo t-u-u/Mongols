@@ -1,9 +1,10 @@
-import random
 from enum import Enum
 from random import choice
-from src.characters import Character
+from src.characters import Character, Characters
 from src.attack_defence import AttackDefence, AttackDefenceLevel
 import logging
+
+from src.validation import CharactersStandings
 
 
 class FightResult(Enum):
@@ -16,6 +17,7 @@ class Fight:
     attack_defence_queue_length: int = 2
     hits_to_stop_combat: int = 1
     rounds_before_draw: int = 20
+    combats_for_statistic: int = 10
 
     attack_defence: AttackDefence
     attacker: Character = None
@@ -122,6 +124,9 @@ class Fight:
             logging.info('Атака прошла успешно')
             # Успешный удар добавляем в атаки первого выбора
             self.attacker.first_choice_attacks.append(self.current_attack)
+            # Двигаем защиты все равно
+            if self.defender.defence_queue:
+                self.defender.current_defences.append(self.defender.defence_queue.pop())
             self.is_attack_successful = True
             return self
         self.is_attack_successful = False
@@ -207,3 +212,27 @@ class Fight:
         if fight_result == FightResult.DRAW:
             logging.info(f'У {self.attacker.name} и {self.defender.name} ничья.')
         return fight_result
+
+    def generate_character_results(self, characters: Characters) -> CharactersStandings:
+        character_standings = CharactersStandings()
+        character_standings.data = []
+        character_standings.header = ['Атакующий персонаж/Защищающийся персонаж', 'Тип']
+        character_standings.header.extend([character.name for character in characters.characters])
+
+        for first_character in characters.characters:
+            cur_data_row = {'Атакующий персонаж/Защищающийся персонаж': first_character.name,
+                            'Тип': first_character.unit_type.value}
+            for second_character in characters.characters:
+                if first_character != second_character:
+                    fight_result_counter = {fight_result: 0 for fight_result in FightResult}
+                    for i in range(self.combats_for_statistic):
+                        fight_result_counter[self.go_fight(first_character, second_character)] += 1
+                    cur_data_row[second_character.name] = '|'.join([str(fight_result_counter[FightResult.WIN]),
+                                                                   str(fight_result_counter[FightResult.DRAW]),
+                                                                   str(fight_result_counter[FightResult.FAIL])])
+                else:
+                    cur_data_row[second_character.name] = ''
+            character_standings.data.append(cur_data_row)
+
+        return character_standings
+

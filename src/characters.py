@@ -42,7 +42,7 @@ class Character:
         self.attack_queue = []
         self.defence_queue = []
 
-    def to_dict(self, for_print: bool = False):
+    def to_print(self, for_print: bool = False):
         if for_print:
             delimiter = '\n'
         else:
@@ -141,5 +141,5 @@ class Characters:
             character1.from_other_character_to_draw(character2)
         return self
 
-    def to_list(self, for_print: bool = False):
-        return [character.to_dict(for_print) for character in self.characters]
+    def to_print(self, for_print: bool = False):
+        return [character.to_print(for_print) for character in self.characters]

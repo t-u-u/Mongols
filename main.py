@@ -28,30 +28,36 @@ def generate_characters():
         fieldnames = characters.HEADER
         writer = csv.DictWriter(res_f, fieldnames=fieldnames, delimiter="\t")
         writer.writeheader()
-        for character in characters.to_list():
+        for character in characters.to_print():
             writer.writerow(character)
 
     with open('data/result_for_print.csv', 'w') as res_f:
         fieldnames = characters.HEADER
         writer = csv.DictWriter(res_f, fieldnames=fieldnames, delimiter="\t")
         writer.writeheader()
-        for character in characters.to_list(for_print=True):
+        for character in characters.to_print(for_print=True):
             writer.writerow(character)
 
-    with open('data/fight_result.csv', 'w') as fight_res_f:
-        fieldnames = ['']
-        fieldnames.extend([character.name for character in characters.characters])
-        writer = csv.DictWriter(fight_res_f, fieldnames=fieldnames, delimiter="\t")
-        writer.writeheader()
+    with open('data/fight_result_new.csv', 'w') as fight_res_f:
+        # fieldnames = ['']
+        # fieldnames.extend([character.name for character in characters.characters])
+        # writer = csv.DictWriter(fight_res_f, fieldnames=fieldnames, delimiter="\t")
+        # writer.writeheader()
+        # fight = Fight(attack_defence=attack_def_dict)
+        # for first_character in characters.characters:
+        #     cur_row = {'': first_character.name}
+        #     for second_character in characters.characters:
+        #         if first_character != second_character:
+        #             cur_row[second_character.name] = fight.go_fight(first_character, second_character).name
+        #         else:
+        #             cur_row[second_character.name] = ''
+        #     writer.writerow(cur_row)
         fight = Fight(attack_defence=attack_def_dict)
-        for first_character in characters.characters:
-            cur_row = {'': first_character.name}
-            for second_character in characters.characters:
-                if first_character != second_character:
-                    cur_row[second_character.name] = fight.go_fight(first_character, second_character).name
-                else:
-                    cur_row[second_character.name] = ''
-            writer.writerow(cur_row)
+        res = fight.generate_character_results(characters)
+        writer = csv.DictWriter(fight_res_f, fieldnames=res.header, delimiter="\t")
+        writer.writeheader()
+        for row in res.data:
+            writer.writerow(row)
 
 
 generate_characters()
